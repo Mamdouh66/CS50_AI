@@ -2,8 +2,7 @@ import os
 import random
 import re
 import sys
-import pandas as pd
-import numpy as np
+import copy
 DAMPING = 0.85
 SAMPLES = 10000
 
@@ -12,18 +11,14 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
-    # ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
-    # print(f"PageRank Results from Sampling (n = {SAMPLES})")
-    # for page in sorted(ranks):
-    #     print(f"  {page}: {ranks[page]:.4f}")
-    # ranks = iterate_pagerank(corpus, DAMPING)
-    # print(f"PageRank Results from Iteration")
-    # for page in sorted(ranks):
-    #     print(f"  {page}: {ranks[page]:.4f}")
-    ranks = transition_model(corpus, "recursion.html", DAMPING)
-    # print(f"PageRank Results from Iteration")
-    # for page in sorted(ranks):
-    #     print(f"  {page}: {ranks[page]:.4f}")
+    ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
+    print(f"PageRank Results from Sampling (n = {SAMPLES})")
+    for page in sorted(ranks):
+        print(f"  {page}: {ranks[page]:.4f}")
+    ranks = iterate_pagerank(corpus, DAMPING)
+    print(f"PageRank Results from Iteration")
+    for page in sorted(ranks):
+        print(f"  {page}: {ranks[page]:.4f}")
 
 
 def crawl(directory):
@@ -50,8 +45,9 @@ def crawl(directory):
 
 def transition_model(corpus, page, damping_factor):
 
-    # a dict. that has all the keys from corpus, N num. of key
+    # a dict. that has all the keys from corpus, N num. of keys
     transModel = dict().fromkeys(corpus)
+    transModel = {key: 0 for key in corpus}
     N = len(dict.fromkeys(corpus))
 
     if len(corpus[page]) == 0:  # if it has no links, just act that as it has one to all pages
@@ -65,14 +61,35 @@ def transition_model(corpus, page, damping_factor):
     for key in transModel:
         transModel[key] += damping_probabilty
         # if page had a link for it, then the surfer should go to them with equal prob.
-        if key in corpus[page]:
+        for key in corpus[page]:
             transModel[key] += (damping_factor/N)
 
     return transModel
 
 
 def sample_pagerank(corpus, damping_factor, n):
-    raise NotImplementedError
+
+    # define variables, N: num. of keys, sample: a random page from corpus, pageRank: rank of each page
+    N = len(dict.fromkeys(corpus))
+    sample = random.choices(list(corpus))[0]
+    pageRank = {key: 1/n for key in corpus}
+
+    for i in range(n):
+        # get the transition model from the random page and get
+        # the next samples and their probabilites
+        sample_model = transition_model(corpus, sample, damping_factor)
+        next_samples = []
+        probabilty_samples = []
+        for key, value in sample_model.items():
+            next_samples.append(key)
+            probabilty_samples.append(value)
+        # the next page should be chosen randomly with weight of prbabilty_samples
+        # increment by 1/n, saying that from one out of n times we have been at that page
+        # eventually knowing the most page visited
+        sample = random.choices(next_samples, probabilty_samples)[0]
+        pageRank[sample] += 1/n
+
+    return pageRank
 
 
 def iterate_pagerank(corpus, damping_factor):

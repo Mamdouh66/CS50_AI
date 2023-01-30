@@ -12,23 +12,21 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
-    # ! TBD
     # ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
     # print(f"PageRank Results from Sampling (n = {SAMPLES})")
     # for page in sorted(ranks):
     #     print(f"  {page}: {ranks[page]:.4f}")
-    ranks = iterate_pagerank(corpus, DAMPING)
-    print(f"PageRank Results from Iteration")
-    for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")
+    # ranks = iterate_pagerank(corpus, DAMPING)
+    # print(f"PageRank Results from Iteration")
+    # for page in sorted(ranks):
+    #     print(f"  {page}: {ranks[page]:.4f}")
+    ranks = transition_model(corpus, "recursion.html", DAMPING)
+    # print(f"PageRank Results from Iteration")
+    # for page in sorted(ranks):
+    #     print(f"  {page}: {ranks[page]:.4f}")
 
 
 def crawl(directory):
-    """
-    Parse a directory of HTML pages and check for links to other pages.
-    Return a dictionary where each key is a page, and values are
-    a list of all other pages in the corpus that are linked to by the page.
-    """
     pages = dict()
 
     # Extract all links from HTML files
@@ -50,39 +48,34 @@ def crawl(directory):
     return pages
 
 
-# def transition_model(corpus, page, damping_factor):
-#     """
-#     Return a probability distribution over which page to visit next,
-#     given a current page.
+def transition_model(corpus, page, damping_factor):
 
-#     With probability `damping_factor`, choose a link at random
-#     linked to by `page`. With probability `1 - damping_factor`, choose
-#     a link at random chosen from all pages in the corpus.
-#     """
-#     raise NotImplementedError
+    # a dict. that has all the keys from corpus, N num. of key
+    transModel = dict().fromkeys(corpus)
+    N = len(dict.fromkeys(corpus))
+
+    if len(corpus[page]) == 0:  # if it has no links, just act that as it has one to all pages
+        for key in transModel:
+            transModel[key] = 1/N
+        return transModel
+
+    # Probabilty of piciking a page in random
+    damping_probabilty = round((1-damping_factor) / N, 4)
+
+    for key in transModel:
+        transModel[key] += damping_probabilty
+        # if page had a link for it, then the surfer should go to them with equal prob.
+        if key in corpus[page]:
+            transModel[key] += (damping_factor/N)
+
+    return transModel
 
 
-# def sample_pagerank(corpus, damping_factor, n):
-#     """
-#     Return PageRank values for each page by sampling `n` pages
-#     according to transition model, starting with a page at random.
-
-#     Return a dictionary where keys are page names, and values are
-#     their estimated PageRank value (a value between 0 and 1). All
-#     PageRank values should sum to 1.
-#     """
-#     raise NotImplementedError
+def sample_pagerank(corpus, damping_factor, n):
+    raise NotImplementedError
 
 
 def iterate_pagerank(corpus, damping_factor):
-    """
-    Return PageRank values for each page by iteratively updating
-    PageRank values until convergence.
-
-    Return a dictionary where keys are page names, and values are
-    their estimated PageRank value (a value between 0 and 1). All
-    PageRank values should sum to 1.
-    """
     # define const. N: num of links, rank: a dict that keeps track of the page rank
     # pageRank : here we save the values for the formula, iterations: will determine how many times we loop
     N = len(dict.fromkeys(corpus))

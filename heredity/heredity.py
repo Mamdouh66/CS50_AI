@@ -130,23 +130,42 @@ def powerset(s):
 
 def joint_probability(people, one_gene, two_genes, have_trait):
 
-    prob = 1
+    propability = 1.0
+
     for person in people:
+        person_probability = 1.0
 
-        if person in one_gene:
-            gene = 1
-        if person in two_genes:
-            gene = 2
+        gene = 1 if person in one_gene else 2 if person in two_genes else 0
+        trait = True if person in have_trait else False
+
+        gene_probabilty = PROBS["gene"][gene]
+        trait_probabilty = PROBS["trait"][gene][trait]
+
+        mother = people[person]["mother"]
+        father = people[person]["father"]
+
+        if not mother and not father:
+            person_probability *= gene_probabilty
         else:
-            gene = 0
+            mother_probabilty = (
+                1-PROBS["mutation"]) if mother in two_genes else 0.5 if mother in one_gene else PROBS["mutation"]
+            father_probabilty = (
+                1-PROBS["mutation"]) if father in two_genes else 0.5 if father in one_gene else PROBS["mutation"]
 
-        if person in have_trait:
-            trait = True
-        else:
-            trait = False
+            if gene == 2:
+                person_probability *= mother_probabilty * father_probabilty
+            elif gene == 1:
+                person_probability *= (1 - mother_probabilty) * father_probabilty + \
+                    (1 - father_probabilty) * mother_probabilty
+            else:
+                person_probability *= (1 - mother_probabilty) * \
+                    (1 - father_probabilty)
 
-        prob *= PROBS["gene"][gene]
-        prob *= PROBS["trait"][gene][trait]
+            person_probability *= trait_probabilty
+
+            propability *= person_probability
+
+    return propability
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):

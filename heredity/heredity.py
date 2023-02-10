@@ -169,7 +169,13 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
-    pass
+
+    for person in probabilities:
+        gene = 1 if person in one_gene else 2 if person in two_genes else 0
+        trait = True if person in have_trait else False
+
+        probabilities[person]["gene"][gene] += p
+        probabilities[person]["trait"][trait] += p
 
 
 def normalize(probabilities):

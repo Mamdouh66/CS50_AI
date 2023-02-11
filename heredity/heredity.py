@@ -161,9 +161,9 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 person_probability *= (1 - mother_probabilty) * \
                     (1 - father_probabilty)
 
-            person_probability *= trait_probabilty
+        person_probability *= trait_probabilty
 
-            propability *= person_probability
+        propability *= person_probability
 
     return propability
 
@@ -179,7 +179,20 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
 
 
 def normalize(probabilities):
-    pass
+
+    for person in probabilities:
+        gene_sum = sum(probabilities[person]["gene"].values())
+        trait_sum = sum(probabilities[person]["trait"].values())
+
+        for gene in probabilities[person]["gene"]:
+            current_prob = probabilities[person]["gene"][gene]
+            normalized_value = current_prob / gene_sum
+            probabilities[person]["gene"][gene] = normalized_value
+
+        for trait in probabilities[person]["trait"]:
+            current_prob = probabilities[person]["trait"][trait]
+            normalized_value = current_prob / trait_sum
+            probabilities[person]["trait"][trait] = normalized_value
 
 
 if __name__ == "__main__":

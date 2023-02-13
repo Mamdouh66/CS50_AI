@@ -1,6 +1,7 @@
 import sys
 
 from crossword import *
+from collections import deque
 
 
 class CrosswordCreator():
@@ -101,19 +102,16 @@ class CrosswordCreator():
                     self.domains[var].remove(value)
 
     def revise(self, x, y):
-        """
-        Make variable `x` arc consistent with variable `y`.
-        To do so, remove values from `self.domains[x]` for which there is no
-        possible corresponding value for `y` in `self.domains[y]`.
 
-        Return True if a revision was made to the domain of `x`; return
-        False if no revision was made.
-        """
-        (i, j) = self.crossword.overlaps[x, y]
+        # revised initially set as false i.e. no changes
         revised = False
+
+        # if there is an overlap save it, otherwise return false
+        (i, j) = self.crossword.overlaps[x, y]
         if (i, j) is None:
             return revised
 
+        # for every word in x domain with letter i, check if it satisfy word y with letter j
         for X in self.domains[x].copy():
             for Y in self.domains[y].copy():
                 if X[i] != Y[j]:
@@ -131,7 +129,17 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        # if arcs is not empty create a deque with given arcs, if empty create one with all arcs
+        if arcs != None:
+            arcs = deque(arcs)
+        else:
+            arcs = deque()
+            for i in self.crossword.variables:
+                for j in self.crossword.neighbors(i):
+                    arcs.appendleft((i, j))
+
+        while arcs:
+            (x, y) = arcs.pop()
 
     def assignment_complete(self, assignment):
         """

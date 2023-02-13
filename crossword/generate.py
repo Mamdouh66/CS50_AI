@@ -121,14 +121,6 @@ class CrosswordCreator():
         return revised
 
     def ac3(self, arcs=None):
-        """
-        Update `self.domains` such that each variable is arc consistent.
-        If `arcs` is None, begin with initial list of all arcs in the problem.
-        Otherwise, use `arcs` as the initial list of arcs to make consistent.
-
-        Return True if arc consistency is enforced and no domains are empty;
-        return False if one or more domains end up empty.
-        """
         # if arcs is not empty create a deque with given arcs, if empty create one with all arcs
         if arcs != None:
             arcs = deque(arcs)
@@ -138,22 +130,45 @@ class CrosswordCreator():
                 for j in self.crossword.neighbors(i):
                     arcs.appendleft((i, j))
 
+        # just the pseudocode provided in note
         while arcs:
             (x, y) = arcs.pop()
+            if self.revise(x, y):
+                if len(self.domains[x]) == 0:
+                    return False
+                for z in self.crossword.neighbors(x) - {y}:
+                    arcs.appendleft((z, x))
+
+        return True
 
     def assignment_complete(self, assignment):
-        """
-        Return True if `assignment` is complete (i.e., assigns a value to each
-        crossword variable); return False otherwise.
-        """
-        raise NotImplementedError
+
+        # if a certain variable isn't in the assignment just return false
+        for key in self.crossword.variables:
+            if key not in assignment:
+                return False
+        return True
 
     def consistent(self, assignment):
-        """
-        Return True if `assignment` is consistent (i.e., words fit in crossword
-        puzzle without conflicting characters); return False otherwise.
-        """
-        raise NotImplementedError
+
+        # check if values are unique
+        if len(set(assignment.values())) != len(assignment.keys()):
+            return False
+
+        # check if values are of correct length
+        for key in assignment:
+            if len(assignment[key]) != len(key):
+                return False
+
+        # check if values overlap
+        for key in assignment:
+            for neighbor in self.crossword.neighbors(key):
+                if neighbor in assignment.keys():
+                    (i, j) = self.crossword.overlaps[key, neighbor]
+                    if assignment[key][i] != assignment[neighbor][j]:
+                        return False
+
+        return True
 
     def order_domain_values(self, var, assignment):
         """

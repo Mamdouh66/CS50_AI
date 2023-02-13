@@ -94,6 +94,7 @@ class CrosswordCreator():
         return self.backtrack(dict())
 
     def enforce_node_consistency(self):
+        """" For every variable make sure its domain satisfy its unary constrins """
         for var in self.domains:
             for value in self.domains[var].copy():
                 if len(value) != len(self.domains[var]):
@@ -108,7 +109,18 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
+        (i, j) = self.crossword.overlaps[x, y]
+        revised = False
+        if (i, j) is None:
+            return revised
+
+        for X in self.domains[x].copy():
+            for Y in self.domains[y].copy():
+                if X[i] != Y[j]:
+                    self.domains[x].remove(X)
+                    revised = True
+
+        return revised
 
     def ac3(self, arcs=None):
         """

@@ -171,13 +171,18 @@ class CrosswordCreator():
         return True
 
     def order_domain_values(self, var, assignment):
-        """
-        Return a list of values in the domain of `var`, in order by
-        the number of values they rule out for neighboring variables.
-        The first value in the list, for example, should be the one
-        that rules out the fewest values among the neighbors of `var`.
-        """
-        raise NotImplementedError
+
+        counter = 0
+        for neighbor in self.crossword.neighbors(var):
+            if neighbor in assignment:
+                break
+
+            (i, j) = self.crossword.overlaps[var, neighbor]
+            for value in self.domains[neighbor]:
+                if var[i] != value[j]:
+                    counter += 1
+
+        return sorted(self.domains[var], key=counter)
 
     def select_unassigned_variable(self, assignment):
         """

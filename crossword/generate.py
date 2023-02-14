@@ -185,14 +185,7 @@ class CrosswordCreator():
         return sorted(self.domains[var], key=counter)
 
     def select_unassigned_variable(self, assignment):
-        """
-        Return an unassigned variable not already part of `assignment`.
-        Choose the variable with the minimum number of remaining values
-        in its domain. If there is a tie, choose the variable with the highest
-        degree. If there is a tie, any of the tied variables are acceptable
-        return values.
-        """
-        raise NotImplementedError
+        pass
 
     def backtrack(self, assignment):
         """

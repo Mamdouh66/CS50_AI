@@ -96,13 +96,9 @@ def iterate_pagerank(corpus, damping_factor):
     # define const. N: num of links, rank: a dict that keeps track of the page rank
     # pageRank : here we save the values for the formula, iterations: will determine how many times we loop
     N = len(dict.fromkeys(corpus))
-    rank = dict.fromkeys(corpus)
+    rank = {key: 1/N for key in corpus}
     pageRank = 0.0
     iterations = 0
-
-    # assign initial probabilty 1/N
-    for key in rank:
-        rank[key] = 1 / N
 
     # Recursive loop
     while True:
@@ -129,13 +125,6 @@ def iterate_pagerank(corpus, damping_factor):
 
         if iterations == N:  # if every page has a tiny diffrence, just break
             break
-
-    # ! debugging
-    # sum = 0
-    # for key in rank:
-    #     print(key, " = ", round(rank[key], 4))
-    #     sum += rank[key]
-    # print(round(sum, 4))
 
     return rank
 

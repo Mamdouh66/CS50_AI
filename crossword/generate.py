@@ -150,10 +150,32 @@ class CrosswordCreator():
         return True
 
     def assignment_complete(self, assignment):
-        pass
+
+        for var in self.domains:
+            if var not in assignment:
+                return False
+        return True
 
     def consistent(self, assignment):
-        pass
+
+        # if not unique return false
+        if len(set(assignment.values())) != len(assignment.values()):
+            return False
+
+        # if they are not of correct length return false
+        for key in assignment:
+            if key.length != len(assignment[key]):
+                return False
+
+        # if variable overlaps wiht neighbor return false
+        for key in assignment:
+            neigborKey = self.crossword.neighbors(key)
+            for nKey in range(len(neigborKey)):
+                (i, j) = self.crossword.overlaps[key, nKey]
+                if nKey in assignment:
+                    if assignment[key][i] != assignment[nKey][j]:
+                        return False
+        return True
 
     def order_domain_values(self, var, assignment):
         pass

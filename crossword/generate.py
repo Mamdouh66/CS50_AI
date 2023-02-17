@@ -95,7 +95,7 @@ class CrosswordCreator():
         return self.backtrack(dict())
 
     def enforce_node_consistency(self):
-        
+
         # loop over every values of a variable and make sure it satisfy unary constrains
         for var in self.domains.copy():
             for val in self.domains[var].copy():
@@ -106,8 +106,8 @@ class CrosswordCreator():
         # check psuedocode in lecture
         revised = False
         # if overlap is None return false
-        (i,j) = self.crossword.overlaps[x, y]
-        if (i,j) is None:
+        (i, j) = self.crossword.overlaps[x, y]
+        if (i, j) is None:
             return revised
         # loop over every value in domain of x
         for xVal in self.domains[x].copy():
@@ -125,7 +125,29 @@ class CrosswordCreator():
         return revised
 
     def ac3(self, arcs=None):
-        pass
+
+        # if arc is empty, create a deque of every arc
+        if arcs is None:
+            queue = deque()
+            for xVal in self.domains.keys():
+                for yVal in self.domains.keys():
+                    if xVal != yVal:
+                        queue.appendleft((xVal, yVal))
+        else:
+            # if not just create one with initial arcs
+            queue = deque()
+            for val in arcs:
+                queue.appendleft(val)
+
+        # psuedocode in the lecture
+        while queue:
+            (i, j) = queue.pop()
+            if revise(i, j):
+                if len(self.domains[i]) == 0:
+                    return False
+                for z in self.crossword.neighbors(i) - {j}:
+                    queue.append(z, i)
+        return True
 
     def assignment_complete(self, assignment):
         pass

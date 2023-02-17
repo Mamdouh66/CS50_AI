@@ -106,9 +106,11 @@ class CrosswordCreator():
         # check psuedocode in lecture
         revised = False
         # if overlap is None return false
-        (i, j) = self.crossword.overlaps[x, y]
-        if (i, j) is None:
+        overlap = self.crossword.overlaps[x, y]
+        if overlap is None:
             return revised
+        i = overlap[0]
+        j = overlap[1]
         # loop over every value in domain of x
         for xVal in self.domains[x].copy():
             # initilize boolean to false to check if to delete this value or not
@@ -141,12 +143,15 @@ class CrosswordCreator():
 
         # psuedocode in the lecture
         while queue:
-            (i, j) = queue.pop()
-            if revise(i, j):
-                if len(self.domains[i]) == 0:
-                    return False
-                for z in self.crossword.neighbors(i) - {j}:
-                    queue.append(z, i)
+            arc = queue.pop()
+            if arc is not None:
+                i = arc[0]
+                j = arc[1]
+                if self.revise(i, j):
+                    if len(self.domains[i]) == 0:
+                        return False
+                    for z in self.crossword.neighbors(i) - {j}:
+                        queue.append(z, i)
         return True
 
     def assignment_complete(self, assignment):
@@ -170,21 +175,44 @@ class CrosswordCreator():
         # if variable overlaps wiht neighbor return false
         for key in assignment:
             neigborKey = self.crossword.neighbors(key)
-            for nKey in range(len(neigborKey)):
-                (i, j) = self.crossword.overlaps[key, nKey]
-                if nKey in assignment:
-                    if assignment[key][i] != assignment[nKey][j]:
-                        return False
+            for nKey in neigborKey:
+                overlap = self.crossword.overlaps[key, nKey]
+                if overlap is not None:
+                    i = overlap[0]
+                    j = overlap[1]
+                    if nKey in assignment:
+                        if assignment[key][i] != assignment[nKey][j]:
+                            return False
         return True
 
     def order_domain_values(self, var, assignment):
-        pass
+
+        values = ((variable, sum(variable in self.domains[neighbor] for neighbor in self.crossword.neighbors(var)))
+                  for variable in self.domains[var] if variable not in assignment)
+        sorted_values = sorted(values, key=lambda item: item[1])
+        return [item[0] for item in sorted_values]
 
     def select_unassigned_variable(self, assignment):
-        pass
+
+        unassigned_variables = [
+            i for i in self.domains.keys() if i not in assignment]
+        variable = min(unassigned_variables, key=lambda i: (
+            len(self.domains[i]), -len(self.crossword.neighbors(i) or [])))
+        degree = len(self.crossword.neighbors(variable) or [])
+        return variable
 
     def backtrack(self, assignment):
-        pass
+        if self.assignment_complete(assignment):
+            return True
+        var = self.select_unassigned_variable(assignment)
+        for val in self.order_domain_values(var, assignment):
+            assignment[var] = val
+            if self.consistent(assignment):
+                result = self.backtrack(assignment)
+                if result is not None:
+                    return result
+            assignment.pop(var)
+        return None
 
 
 def main():

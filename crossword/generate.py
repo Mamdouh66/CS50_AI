@@ -103,7 +103,26 @@ class CrosswordCreator():
                     self.domains[var].remove(val)
 
     def revise(self, x, y):
-        pass
+        # check psuedocode in lecture
+        revised = False
+        # if overlap is None return false
+        (i,j) = self.crossword.overlaps[x, y]
+        if (i,j) is None:
+            return revised
+        # loop over every value in domain of x
+        for xVal in self.domains[x].copy():
+            # initilize boolean to false to check if to delete this value or not
+            xDelete = False
+            for yVal in self.domains[y]:
+                # if it doesn't satisfy binary constraint change it to true
+                if xVal[i] != yVal[j]:
+                    xDelete = True
+                    break
+            # delete that value from domain of x
+            if xDelete:
+                self.domains[x].remove(xVal)
+                revised = True
+        return revised
 
     def ac3(self, arcs=None):
         pass

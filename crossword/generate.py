@@ -95,7 +95,12 @@ class CrosswordCreator():
         return self.backtrack(dict())
 
     def enforce_node_consistency(self):
-        pass
+        
+        # loop over every values of a variable and make sure it satisfy unary constrains
+        for var in self.domains.copy():
+            for val in self.domains[var].copy():
+                if len(val) != var.length:
+                    self.domains[var].remove(val)
 
     def revise(self, x, y):
         pass

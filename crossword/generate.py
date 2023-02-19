@@ -2,6 +2,7 @@ import sys
 
 from crossword import *
 from collections import deque
+import copy
 
 
 class CrosswordCreator():
@@ -109,25 +110,23 @@ class CrosswordCreator():
         overlap = self.crossword.overlaps[x, y]
         if overlap is None:
             return revised
-        i = overlap[0]
-        j = overlap[1]
+        i, j = overlap
         # loop over every value in domain of x
         for xVal in self.domains[x].copy():
             # initilize boolean to false to check if to delete this value or not
             xDelete = False
             for yVal in self.domains[y]:
                 # if it doesn't satisfy binary constraint change it to true
-                if xVal[i] != yVal[j]:
+                if xVal != yVal and xVal[i] == yVal[j]:
                     xDelete = True
                     break
             # delete that value from domain of x
-            if xDelete:
+            if not xDelete:
                 self.domains[x].remove(xVal)
                 revised = True
         return revised
 
     def ac3(self, arcs=None):
-
         # if arc is empty, create a deque of every arc
         if arcs is None:
             queue = deque()
@@ -141,7 +140,6 @@ class CrosswordCreator():
             for val in arcs:
                 queue.appendleft(val)
 
-        # psuedocode in the lecture
         while queue:
             arc = queue.pop()
             if arc is not None:
@@ -151,27 +149,23 @@ class CrosswordCreator():
                     if len(self.domains[i]) == 0:
                         return False
                     for z in self.crossword.neighbors(i) - {j}:
-                        queue.append(z, i)
+                        queue.appendleft((z, i))
         return True
 
     def assignment_complete(self, assignment):
-
         for var in self.domains:
             if var not in assignment:
                 return False
         return True
 
     def consistent(self, assignment):
-
         # if not unique return false
         if len(set(assignment.values())) != len(assignment.values()):
             return False
-
         # if they are not of correct length return false
         for key in assignment:
             if key.length != len(assignment[key]):
                 return False
-
         # if variable overlaps wiht neighbor return false
         for key in assignment:
             neigborKey = self.crossword.neighbors(key)
@@ -187,31 +181,69 @@ class CrosswordCreator():
 
     def order_domain_values(self, var, assignment):
 
-        values = ((variable, sum(variable in self.domains[neighbor] for neighbor in self.crossword.neighbors(var)))
-                  for variable in self.domains[var] if variable not in assignment)
-        sorted_values = sorted(values, key=lambda item: item[1])
-        return [item[0] for item in sorted_values]
+        # make temporary dict for holding values
+        word_dict = {}
+
+        # getting neighbours of var
+        neighbours = self.crossword.neighbors(var)
+
+        # iterating through var's words
+        for word in self.domains[var]:
+            eliminated = 0
+            for neighbour in neighbours:
+                # don't count if neighbor has already assigned value
+                if neighbour in assignment:
+                    continue
+                else:
+                    # calculate overlap between two variables
+                    xoverlap, yoverlap = self.crossword.overlaps[var, neighbour]
+                    for neighbour_word in self.domains[neighbour]:
+                        # iterate through neighbour's words, check for eliminate ones
+                        if word[xoverlap] != neighbour_word[yoverlap]:
+                            eliminated += 1
+            # add eliminated neighbour's words to temporary dict
+            word_dict[word] = eliminated
+
+        # sort variables dictionary by number of eliminated neighbour values
+        sorted_dict = {k: v for k, v in sorted(
+            word_dict.items(), key=lambda item: item[1])}
+
+        return [*sorted_dict]
 
     def select_unassigned_variable(self, assignment):
 
-        unassigned_variables = [
-            i for i in self.domains.keys() if i not in assignment]
-        variable = min(unassigned_variables, key=lambda i: (
-            len(self.domains[i]), -len(self.crossword.neighbors(i) or [])))
-        degree = len(self.crossword.neighbors(variable) or [])
-        return variable
+        choice_dict = {}
+
+        # iterating through variables in domains
+        for variable in self.domains:
+            # iterating through variables in assignment
+            if variable not in assignment:
+                # if variable is not yet in assigment, add it to temp dict
+                choice_dict[variable] = self.domains[variable]
+
+        # make list of variables sorted by number of remaining values
+        sorted_list = [v for v, k in sorted(
+            choice_dict.items(), key=lambda item:len(item[1]))]
+
+        # return variable with the minimum number of remaining values
+        return sorted_list[0]
 
     def backtrack(self, assignment):
-        if self.assignment_complete(assignment):
-            return True
+
+        if len(assignment) == len(self.domains):
+            return assignment
+
         var = self.select_unassigned_variable(assignment)
-        for val in self.order_domain_values(var, assignment):
-            assignment[var] = val
-            if self.consistent(assignment):
-                result = self.backtrack(assignment)
+        # iterating through words in that variable
+        for value in self.domains[var]:
+            # making assignment copy, with updated variable value
+            assignment_copy = assignment.copy()
+            assignment_copy[var] = value
+            # checking for consistency, getting result of that new assignment backtrack
+            if self.consistent(assignment_copy):
+                result = self.backtrack(assignment_copy)
                 if result is not None:
                     return result
-            assignment.pop(var)
         return None
 
 

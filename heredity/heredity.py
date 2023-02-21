@@ -135,6 +135,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     for person in people:
         person_probability = 1.0
 
+        # set gene and trait probabilities
         gene = 1 if person in one_gene else 2 if person in two_genes else 0
         trait = True if person in have_trait else False
 
@@ -144,14 +145,17 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         mother = people[person]["mother"]
         father = people[person]["father"]
 
+        # if no parents
         if not mother and not father:
             person_probability *= gene_probabilty
         else:
+            # if there are, get mutation probability
             mother_probabilty = (
                 1-PROBS["mutation"]) if mother in two_genes else 0.5 if mother in one_gene else PROBS["mutation"]
             father_probabilty = (
                 1-PROBS["mutation"]) if father in two_genes else 0.5 if father in one_gene else PROBS["mutation"]
 
+            # calculate gene probability based on person's number of genes
             if gene == 2:
                 person_probability *= mother_probabilty * father_probabilty
             elif gene == 1:
@@ -161,8 +165,10 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 person_probability *= (1 - mother_probabilty) * \
                     (1 - father_probabilty)
 
+        # add trait probability to person
         person_probability *= trait_probabilty
 
+        # add person probability to joint probability
         propability *= person_probability
 
     return propability

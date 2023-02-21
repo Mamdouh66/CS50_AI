@@ -180,53 +180,26 @@ class CrosswordCreator():
         return True
 
     def order_domain_values(self, var, assignment):
-
-        # make temporary dict for holding values
-        word_dict = {}
-
-        # getting neighbours of var
-        neighbours = self.crossword.neighbors(var)
-
-        # iterating through var's words
-        for word in self.domains[var]:
-            eliminated = 0
-            for neighbour in neighbours:
-                # don't count if neighbor has already assigned value
-                if neighbour in assignment:
-                    continue
-                else:
-                    # calculate overlap between two variables
-                    xoverlap, yoverlap = self.crossword.overlaps[var, neighbour]
-                    for neighbour_word in self.domains[neighbour]:
-                        # iterate through neighbour's words, check for eliminate ones
-                        if word[xoverlap] != neighbour_word[yoverlap]:
-                            eliminated += 1
-            # add eliminated neighbour's words to temporary dict
-            word_dict[word] = eliminated
-
-        # sort variables dictionary by number of eliminated neighbour values
-        sorted_dict = {k: v for k, v in sorted(
-            word_dict.items(), key=lambda item: item[1])}
-
-        return [*sorted_dict]
+        domain = {}
+        for variable in self.domains[var]:
+            if variable not in assignment:
+                count = 0
+                for neighbor in self.crossword.neighbors(var):
+                    if variable in self.domains[neighbor]:
+                        count += 1
+                domain[variable] = count
+        return sorted(domain, x=lambda x: domain[x])
 
     def select_unassigned_variable(self, assignment):
 
-        choice_dict = {}
-
-        # iterating through variables in domains
-        for variable in self.domains:
-            # iterating through variables in assignment
-            if variable not in assignment:
-                # if variable is not yet in assigment, add it to temp dict
-                choice_dict[variable] = self.domains[variable]
-
-        # make list of variables sorted by number of remaining values
-        sorted_list = [v for v, k in sorted(
-            choice_dict.items(), key=lambda item:len(item[1]))]
-
-        # return variable with the minimum number of remaining values
-        return sorted_list[0]
+        possible_vars = {}
+        for var in self.domains:
+            if var not in assignment:
+                possible_vars[var] = self.domains[var]
+        # order by MRV
+        min_rem = [key for key, val in sorted(
+            possible_vars.items(), key=lambda item:len(item[1]))]
+        return min_rem[0]
 
     def backtrack(self, assignment):
 
@@ -234,12 +207,10 @@ class CrosswordCreator():
             return assignment
 
         var = self.select_unassigned_variable(assignment)
-        # iterating through words in that variable
+
         for value in self.domains[var]:
-            # making assignment copy, with updated variable value
             assignment_copy = assignment.copy()
             assignment_copy[var] = value
-            # checking for consistency, getting result of that new assignment backtrack
             if self.consistent(assignment_copy):
                 result = self.backtrack(assignment_copy)
                 if result is not None:

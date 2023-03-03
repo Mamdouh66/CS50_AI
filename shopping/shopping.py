@@ -91,7 +91,9 @@ def load_data(filename):
 
 
 def train_model(evidence, labels):
-    pass
+    model = KNeighborsClassifier(n_neighbors=1)
+    model.fit(evidence, labels)
+    return model
 
 
 def evaluate(labels, predictions):

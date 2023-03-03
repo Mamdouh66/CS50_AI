@@ -97,7 +97,25 @@ def train_model(evidence, labels):
 
 
 def evaluate(labels, predictions):
-    pass
+    sensitivity = 0.0
+    specificity = 0.0
+    sens_counter = 0.0
+    spec_counter = 0.0
+    for label, prediction in zip(labels, predictions):
+        if label == 1:
+            sens_counter += 1
+            if label == prediction:
+                sensitivity += 1
+
+        if label == 0:
+            spec_counter += 1
+            if label == prediction:
+                specificity += 1
+
+    sensitivity /= sens_counter
+    specificity /= spec_counter
+
+    return sensitivity, specificity
 
 
 if __name__ == "__main__":

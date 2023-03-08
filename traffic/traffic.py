@@ -45,29 +45,46 @@ def main():
 
 
 def load_data(data_dir):
-    """
-    Load image data from directory `data_dir`.
 
-    Assume `data_dir` has one directory named after each category, numbered
-    0 through NUM_CATEGORIES - 1. Inside each category directory will be some
-    number of image files.
+    images = []
+    labels = []
 
-    Return tuple `(images, labels)`. `images` should be a list of all
-    of the images in the data directory, where each image is formatted as a
-    numpy ndarray with dimensions IMG_WIDTH x IMG_HEIGHT x 3. `labels` should
-    be a list of integer labels, representing the categories for each of the
-    corresponding `images`.
-    """
-    raise NotImplementedError
+    for subcat in range(NUM_CATEGORIES):
+        path = os.path.join(data_dir, str(subcat))
+        for category in os.listdir(path):
+            image = cv2.imread(os.path.join(path, category))
+            image = cv2.resize(image, (IMG_WIDTH, IMG_HEIGHT))
+            images.append(image)
+            labels.append(subcat)
+    return images, labels
 
 
 def get_model():
-    """
-    Returns a compiled convolutional neural network model. Assume that the
-    `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
-    The output layer should have `NUM_CATEGORIES` units, one for each category.
-    """
-    raise NotImplementedError
+    model = tf.keras.models.Sequential([
+
+        # Add 2 sequential 32 filter, 3x3 Convolutional Layers Followed by 3x3 Pooling
+        tf.keras.layers.Conv2D(32, (3, 3), activation="relu",
+                               input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
+        tf.keras.layers.MaxPooling2D(pool_size=(3, 3)),
+        tf.keras.layers.Conv2D(32, (3, 3), activation="relu"),
+        tf.keras.layers.MaxPooling2D(pool_size=(3, 3)),
+
+        # Flatten layers
+        tf.keras.layers.Flatten(),
+
+        # Add A Dense Hidden layer with 256 units and 25% dropout
+        tf.keras.layers.Dense(256, activation="relu"),
+        tf.keras.layers.Dropout(0.25),
+
+        # Add Dense Output layer with 43 output units
+        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
+    ])
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    # Return model for training and testing
+    return model
 
 
 if __name__ == "__main__":

@@ -62,17 +62,24 @@ def load_data(data_dir):
 def get_model():
     model = tf.keras.models.Sequential([
 
-        # Add 2 sequential 32 filter, 3x3 Convolutional Layers Followed by 3x3 Pooling
-        tf.keras.layers.Conv2D(32, (3, 3), activation="relu",
-                               input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
-        tf.keras.layers.MaxPooling2D(pool_size=(3, 3)),
-        tf.keras.layers.Conv2D(32, (3, 3), activation="relu"),
+        # 2xConvolutional layer, 32 filters, 3x3 kernel
+        tf.keras.layers.Conv2D(
+            32,  (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
+        ),
+        tf.keras.layers.Conv2D(
+            32,  (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
+        ),
+        # Max-pooling layer, using 3x3 pool size
         tf.keras.layers.MaxPooling2D(pool_size=(3, 3)),
 
-        # Flatten layers
+        # Flatten units
         tf.keras.layers.Flatten(),
 
-        # Add A Dense Hidden layer with 256 units and 25% dropout
+        # Add a hidden layer with dropout
+        tf.keras.layers.Dense(256, activation="relu"),
+        tf.keras.layers.Dropout(0.25),
+
+        # Add another hidden layer with dropout
         tf.keras.layers.Dense(256, activation="relu"),
         tf.keras.layers.Dropout(0.25),
 

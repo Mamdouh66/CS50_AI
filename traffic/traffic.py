@@ -66,6 +66,7 @@ def get_model():
         tf.keras.layers.Conv2D(
             32,  (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
         ),
+
         tf.keras.layers.Conv2D(
             32,  (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
         ),
@@ -75,13 +76,15 @@ def get_model():
         # Flatten units
         tf.keras.layers.Flatten(),
 
+        # 256 units took 237 seconds to run with 97.32 accuracy
+        # 128 units took 165 seconds to run with 97.38 accuracy
         # Add a hidden layer with dropout
-        tf.keras.layers.Dense(256, activation="relu"),
+        tf.keras.layers.Dense(128, activation="relu"),
         tf.keras.layers.Dropout(0.25),
 
         # Add another hidden layer with dropout
-        tf.keras.layers.Dense(256, activation="relu"),
-        tf.keras.layers.Dropout(0.25),
+        # tf.keras.layers.Dense(128, activation="relu"),
+        # tf.keras.layers.Dropout(0.25),
 
         # Add Dense Output layer with 43 output units
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")

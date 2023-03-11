@@ -1,5 +1,6 @@
 import nltk
 import sys
+import re
 
 TERMINALS = """
 Adj -> "country" | "dreadful" | "enigmatical" | "little" | "moist" | "red"
@@ -15,7 +16,7 @@ V -> "smiled" | "tell" | "were"
 """
 
 NONTERMINALS = """
-S -> N V
+S -> NP VP | NP VP Conj NP VP | NP VP Conj VP
 NP -> N | Det N | Det AP N | P NP | NP P NP
 VP -> V | Adv VP | V Adv | VP NP | V NP Adv
 AP -> Adj | AP Adj
@@ -58,11 +59,11 @@ def main():
 
 
 def preprocess(sentence):
-    return [word for word in nltk.word_tokenize(sentence.lower()) if word.isalpha()]
+    return [word.lower() for word in nltk.word_tokenize(sentence) if re.search('[a-z]', word)]
 
 
 def np_chunk(tree):
-    pass
+    return [subtree for subtree in tree.subtrees()if subtree.label() == "NP"]
 
 
 if __name__ == "__main__":

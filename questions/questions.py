@@ -2,6 +2,7 @@ import nltk
 import sys
 import string
 import math
+import os
 
 FILE_MATCHES = 1
 SENTENCE_MATCHES = 1
@@ -52,13 +53,14 @@ def load_files(directory):
         path = os.path.join(directory, File)
         with open(path, mode="r") as f:
             files[File] = f.read()
+    return files
 
 
 def tokenize(document):
 
     tokens = []
 
-    for word in word_tokenize(document.lower()):
+    for word in nltk.word_tokenize(document.lower()):
         if word in string.punctuation or word in nltk.corpus.stopwords.words("english"):
             continue
         else:
@@ -86,24 +88,42 @@ def compute_idfs(documents):
 
 
 def top_files(query, files, idfs, n):
-    """
-    Given a `query` (a set of words), `files` (a dictionary mapping names of
-    files to a list of their words), and `idfs` (a dictionary mapping words
-    to their IDF values), return a list of the filenames of the the `n` top
-    files that match the query, ranked according to tf-idf.
-    """
-    raise NotImplementedError
+
+    scores = {File: 0 for File in files}
+
+    for word in query:
+        for File in files:
+            if word in files[File] and idfs:
+                tf = files[File].count(word)
+                tfidf = tf * idfs[word]
+                scores[File] += tfidf
+
+    sorted_scores = [key for key, value in sorted(
+        scores.items(), key=lambda File: File[1], reverse=True)]
+    return sorted_scores[:n]
 
 
 def top_sentences(query, sentences, idfs, n):
-    """
-    Given a `query` (a set of words), `sentences` (a dictionary mapping
-    sentences to a list of their words), and `idfs` (a dictionary mapping words
-    to their IDF values), return a list of the `n` top sentences that match
-    the query, ranked according to idf. If there are ties, preference should
-    be given to sentences that have a higher query term density.
-    """
-    raise NotImplementedError
+
+    best_sentences = {}
+
+    for sentence in sentences:
+        sentence_score = 0
+        for word in query:
+            if word in sentences[sentence]:
+                sentence_score += idfs[word]
+        if sentence_score != 0:
+            total = 0
+            for word in query:
+                total += sentences[sentence].count(word)
+
+            qtd_value = total / len(sentences[sentence])
+            best_sentences[sentence] = (sentence_score, qtd_value)
+
+    sorted_by_score = [k for k, v in sorted(
+        best_sentences.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)]
+
+    return sorted_by_score[:n]
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 import nltk
 import sys
+import string
+import math
 
 FILE_MATCHES = 1
 SENTENCE_MATCHES = 1
@@ -53,25 +55,34 @@ def load_files(directory):
 
 
 def tokenize(document):
-    """
-    Given a document (represented as a string), return a list of all of the
-    words in that document, in order.
 
-    Process document by coverting all words to lowercase, and removing any
-    punctuation or English stopwords.
-    """
-    raise NotImplementedError
+    tokens = []
+
+    for word in word_tokenize(document.lower()):
+        if word in string.punctuation or word in nltk.corpus.stopwords.words("english"):
+            continue
+        else:
+            tokens.append(word)
+    return tokens
 
 
 def compute_idfs(documents):
-    """
-    Given a dictionary of `documents` that maps names of documents to a list
-    of words, return a dictionary that maps words to their IDF values.
 
-    Any word that appears in at least one of the documents should be in the
-    resulting dictionary.
-    """
-    raise NotImplementedError
+    idfs = {}
+    word_counter = {}
+
+    for document in documents:
+        for word in set(documents[document]):
+            if word not in word_counter:
+                word_counter[word] = 1
+            else:
+                word_counter[word] += 1
+
+    for word in word_counter:
+        idfs_value = math.log(len(documents)/word_counter[word])
+        idfs[word] = idfs_value
+
+    return idfs
 
 
 def top_files(query, files, idfs, n):
